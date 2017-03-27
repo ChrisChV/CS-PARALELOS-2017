@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "utils.h"
 
-#define TILE_SIZE 32
+#define TILE_SIZE 16
 
 Matrix matrixProduct(Matrix A, Matrix B){
 	Matrix m_res;
@@ -49,6 +49,6 @@ int main(){
 	//printMatrix(A);
 	//printMatrix(B);
 	Matrix C = matrixProduct(A,B);
-	printf("Done\n");
+	//printf("Done\n");
 	//printMatrix(C);
 }
