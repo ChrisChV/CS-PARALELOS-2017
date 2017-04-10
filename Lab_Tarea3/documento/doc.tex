@@ -1,0 +1,96 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{color}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{vmargin}
+\graphicspath{ {imagenes/} }
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\usepackage{epstopdf}
+
+
+\begin{document}
+\title{Problemas MPI}
+\author{
+Christofer Fabián Chávez Carazas \\
+\small{Universidad Nacional de San Agustín} \\
+\small{Algoritmos Paralelos}
+}
+
+\maketitle
+
+\section{Problema 1}
+
+El problema de la regla del trapecio consiste en calcular el área bajo la curva dividiéndola en trapecios y calculando
+su respectiva área. Esto se puede hacer de forma paralela repartiendo los trapecios entre los procesos.
+
+\section{Problema 2}
+
+Para probar el funcionamiento de \textit{MPI\_Scatter y MPI\_Gather} se utilizó el siguiente ejemplo: Primero se crea
+un vector con números aleatorios. Se divide dicho vector entre los procesos con \textit{MPI\_Scatter}. Cada
+proceso multiplica por dos todos los elementos de su vector y luego se junta el vector en el proceso 0 con \textit{MPI\_Gather}
+
+\section{Problema 3}
+
+El problema de la multiplicación de una matriz con un vector se puede resolver sin usar la función \textit{MPI\_Allgather},
+pero existen varios métodos matemáticos que se basan en iteraciones para llegar al resultado, haciendo que el vector resultante
+de la iteración actual sea el vector que se multiplica en la iteración siguiente. Para estos problemas si sería útil
+utilizar \textit{MPI\_Allgather} para que todos los procesos tengan el vector que van a multiplicar en la siguiente iteración.
+
+\section{Problema 4}
+
+Los resultados del tiempo de ejecución, los speedups y la eficiencia de la multiplicación matriz-vector se muestran
+en las Tablas \ref{tab:1}, \ref{tab:2}, \ref{tab:3} respectivamente
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}\hline
+comm\_sz & 1024 & 2048 & 4096 & 8192 & 16384\\\hline
+1 & 4.446697 & 16.7391302 & 66.0467146 & 264.5243646 & 1050.9673596\\\hline
+2 & 2.483177 & 9.6812724 & 39.4764902 & 160.9163284 & 621.1693764\\\hline
+4 & 2.3790836 & 9.7565648 & 38.4766 & 152.342 & 609.9132\\\hline
+8 & 1.1930944 & 4.8534 & 19.1686 & 76.5276 & 303.3648\\\hline
+16 & 0.7364748 & 2.4656 & 9.6542 & 38.916 & 151.109\\\hline
+\end{tabular}
+\end{center}
+\caption{Tiempos de ejecución de la multiplicación matriz-vector (En milisegundos)}
+\label{tab:1}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}\hline
+comm\_sz & 1024 & 2048 & 4096 & 8192 & 16384\\\hline
+1 & 1 & 1 & 1 & 1 & 1\\\hline
+2 & 1.7907289734 & 1.7290217141 & 1.6730645066 & 1.6438627902 & 1.6919175341\\\hline
+4 & 1.8690797583 & 1.7156786782 & 1.7165423816 & 1.7363850061 & 1.7231425055\\\hline
+8 & 3.7270286408 & 3.4489492315 & 3.4455679914 & 3.4565877487 & 3.4643681785\\\hline
+16 & 6.0378128349 & 6.7890696788 & 6.8412415943 & 6.7973163891 & 6.955028222\\\hline
+\end{tabular}
+\end{center}
+\caption{Speedups de la multiplicación matriz-vector}
+\label{tab:2}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}\hline
+comm\_sz & 1024 & 2048 & 4096 & 8192 & 16384\\\hline
+1 & 1 & 1 & 1 & 1 & 1\\\hline
+2 & 0.8953644867 & 0.8645108571 & 0.8365322533 & 0.8219313951 & 0.8459587671\\\hline
+4 & 0.4672699396 & 0.4289196696 & 0.4291355954 & 0.4340962515 & 0.4307856264\\\hline
+8 & 0.4658785801 & 0.4311186539 & 0.4306959989 & 0.4320734686 & 0.4330460223\\\hline
+16 & 0.3773633022 & 0.4243168549 & 0.4275775996 & 0.4248322743 & 0.4346892639\\\hline
+\end{tabular}
+\end{center}
+\caption{Eficiencia de la multiplicación matriz-vector}
+\label{tab:3}
+\end{table}
+
+
+
+\end{document}
