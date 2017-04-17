@@ -1,16 +1,16 @@
 echo "Linked-List"
-rm ll_run
-gcc -g linked_list.c -o ll_run -lpthread
+rm LinkedList/ll_run
+gcc -g LinkedList/linked_list.c -o LinkedList/ll_run -lpthread
 echo "----------------------------"
 echo "Matrix-Vector Multiplications"
-rm mv_run
-gcc -g matrix_x_vector.c -o mv_run -lpthread
+rm MatrixVectorMul/mv_run
+gcc -g MatrixVectorMul/matrix_x_vector.c -o MatrixVectorMul/mv_run -lpthread
 echo "----------------------------"
-echo "PI Bussy"
-rm pi_run
-gcc -g pi.c -o pi_run -lpthread
+echo "PI"
+rm PI/pi_run
+gcc -g PI/pi.c -o PI/pi_run -lpthread
 echo "----------------------------"
 echo "Strtok"
-rm str_run
-gcc -g strtok_p.c -o str_run -lpthread
+rm Strtock/str_run
+gcc -g Strtock/strtok_p.c -o Strtock/str_run -lpthread
 
