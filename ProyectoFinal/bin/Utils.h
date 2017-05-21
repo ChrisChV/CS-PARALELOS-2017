@@ -37,3 +37,42 @@ char * getRandomPrime(int size, int seed){
 	mpz_clear(prime);
 	return res;
 }
+
+int coprimes(mpz_t a, mpz_t b){
+	mpz_t temp;
+	mpz_init(temp);
+	mpz_gcd(temp,a,b);
+	if(mpz_cmp_si(temp,1) == 0){
+		mpz_clear(temp);
+		return 1;	
+	} 
+	mpz_clear(temp);
+	return 0;
+}
+
+char * getCoprime(mpz_t n){
+	mpz_t e;
+	mpz_t one;
+	mpz_t two;
+	mpz_init(e);
+	mpz_init(one);
+	mpz_init(two);
+	mpz_set_ui(one,1);
+	mpz_set_ui(two,2);
+	mpz_set(e,n);
+	mpz_div(e,e,two);
+	do{
+		mpz_sub(e,e,one);	
+	}while(coprimes(e,n) == 0  && mpz_cmp_si(e,1) != 0);
+	char * res = (char *) malloc(mpz_sizeinbase(e,10));
+	mpz_get_str(res,10,e);
+	mpz_clear(e);
+	mpz_clear(one);
+	mpz_clear(two);
+	return res;
+}
+
+
+
+
+
