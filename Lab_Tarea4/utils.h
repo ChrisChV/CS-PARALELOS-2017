@@ -7,10 +7,41 @@
 
 #define RAND_RANGE_NUM 100
 
+int * getZeroVector(int size){
+	int * res = (int*) malloc(sizeof(int) * size);
+	for(int i = 0; i < size; i++){
+		res[i] = 0;
+	}
+	return res;
+}
+
+int ** getZeroMatrix(int fil, int col){
+	int ** res = (int**) malloc(sizeof(void*) * fil);
+	for(int i = 0; i < fil; i++){
+		res[fil] = (int*) malloc(sizeof(int) * col);
+	}
+	for(int i = 0; i < fil; i++){
+		for(int j = 0; j < col; j++){
+			res[i][j] = 0;
+		}
+	}
+	return res;
+}
+
 void printMatrix(int ** matrix, int fil, int col){
 	for(int i = 0; i < fil; i++){
 		for(int j = 0; j < col; j++){
 			printf("%d ",matrix[i][j]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+}
+
+void printVectorMatrix(int * matrix, int fil, int col){
+	for(int i = 0; i < fil; i++){
+		for(int j = 0; j < col; j++){
+			printf("%d ", matrix[i * col + j]);
 		}
 		printf("\n");
 	}

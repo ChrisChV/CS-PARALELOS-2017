@@ -10,8 +10,23 @@ int numThread;
 sem_t * semaforos;
 FILE * pFile;
 
-
-
+char * my_strtock(char my_line[], int size, int count){
+	int i = 0;
+	int c = -1;
+	int n = 0;
+	for(i = 0; i < size; i++){
+		if(my_line[i] == ' ' || my_line[i] == '\n'){
+			c++;
+			if(c == count) break;
+			if(my_line[i] == '\n' && c != count) return NULL;
+			n = 0;
+		} 
+		else n++;
+	}
+	char * res = malloc(n);
+	memcpy(res,&my_line[i - n],n);
+	return res;
+}
 
 void * tokenize(void * rank){
 	long my_rank = *((long*)rank);
@@ -27,11 +42,12 @@ void * tokenize(void * rank){
 	while(fg_rv != NULL){
 		printf("Thread %ld > my line = %s", my_rank, my_line);
 		count = 0;
-		my_string = strtok_r(my_line," \t\n",&saveptr);
+		//my_string = strtok_r(my_line," \t\n",&saveptr);
+		my_string = my_strtock(my_line,MAX,count);
 		while(my_string != NULL){
 			count++;
 			printf("Thread %ld > string %d = %s\n", my_rank, count, my_string);
-			my_string = strtok_r(NULL, " \t\n",&saveptr);
+			my_string = my_strtock(my_line,MAX,count);
 		}
 		sem_wait(&semaforos[my_rank]);
 		fg_rv = fgets(my_line, MAX, pFile);
