@@ -5,7 +5,7 @@
 
 int main(int argc, char ** argv){
 	srand(time(NULL));
-	keyGeneration(128);
+	keyGeneration(10);
 	
 	
 	

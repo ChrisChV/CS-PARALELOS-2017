@@ -54,13 +54,17 @@ char * getCoprime(mpz_t n){
 	mpz_t e;
 	mpz_t one;
 	mpz_t two;
+	mpz_t temp;
 	mpz_init(e);
 	mpz_init(one);
 	mpz_init(two);
+	mpz_init(temp);
 	mpz_set_ui(one,1);
-	mpz_set_ui(two,2);
+	mpz_set_ui(two,3);
+	mpz_set_ui(temp,20);
 	mpz_set(e,n);
 	mpz_div(e,e,two);
+	mpz_sub(e,e,temp);
 	do{
 		mpz_sub(e,e,one);	
 	}while(coprimes(e,n) == 0  && mpz_cmp_si(e,1) != 0);
@@ -69,9 +73,9 @@ char * getCoprime(mpz_t n){
 	mpz_clear(e);
 	mpz_clear(one);
 	mpz_clear(two);
+	mpz_clear(temp);
 	return res;
 }
-
 
 
 
