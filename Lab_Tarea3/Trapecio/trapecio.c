@@ -20,7 +20,7 @@ double Trap(double left_endpt, double right_endpt, int trap_count, double base_l
 int main(){
 	int my_rank;
 	int comm_sz;
-	int n = 1024;
+	int n = 33554432;
 	int local_n = 0;
 	double a = 0.0;
 	double b = 3.0;

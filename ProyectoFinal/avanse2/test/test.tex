@@ -1,0 +1,116 @@
+\documentclass[landscape]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{color}
+\usepackage{pdflscape}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{vmargin}
+\graphicspath{ {imagenes/} }
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\usepackage{epstopdf}
+
+
+\setpapersize{A4}
+\setmargins{2.5cm}       % margen izquierdo
+{1.5cm}                        % margen superior
+{16.5cm}                      % anchura del texto
+{23.42cm}                    % altura del texto
+{10pt}                           % altura de los encabezados
+{1cm}                           % espacio entre el texto y los encabezados
+{0pt}                             % altura del pie de página
+{2cm}     
+
+\lstset{
+backgroundcolor=\color{lbcolor},
+    tabsize=4,    
+%   rulecolor=,
+    language=[GNU]C++,
+        basicstyle=\tiny,
+        aboveskip={1.5\baselineskip},
+        columns=fixed,
+        showstringspaces=false,
+        extendedchars=false,
+        breaklines=true,
+        prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+        frame=single,
+        showtabs=false,
+        showspaces=false,
+        showstringspaces=false,
+        identifierstyle=\ttfamily,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.026,0.112,0.095},
+        stringstyle=\color{red},
+        numberstyle=\color[rgb]{0.205, 0.142, 0.73},
+%        \lstdefinestyle{C++}{language=C++,style=numbers}’.
+}
+
+
+\begin{document}
+\title{An Efficient Parallel Algorithm for Secured Data Communications Using RSA Public Key Cryptography Method}
+\author{
+Christofer Fabián Chávez Carazas \\
+\small{Universidad Nacional de San Agustín} \\
+\small{Algoritmos Paralelos}
+}
+
+\maketitle
+
+\begin{landscape}
+\begin{tabular}{ | l | l | l | l | l | l | l | }
+\hline
+	\textbf{Message Size} & \textbf{Segment Type} & \textbf{1 core} & \textbf{2 cores} & \textbf{4 cores} & \textbf{8 cores} & \textbf{Speedup} \\ \hline
+	\textbf{1000} & Encryption Time & 0.46757464 & 0.24420352 & 0.1278022 & 0.1122454 & 4.17x \\ \hline
+	 & Decryption Time & 0.46962944 & 0.2443334 & 0.13012468 & 0.11307884 & 4.15x \\ \hline
+	 & Overall Time & 0.94608372 & 0.49687084 & 0.26618736 & 0.23471736 & 4.03x \\ \hline
+	\textbf{2000} & Encryption Time & 0.93499464 & 0.47531964 & 0.25300544 & 0.22485532 & 4.16x \\ \hline
+	 & Decryption Time & 0.9367404 & 0.47633848 & 0.25627944 & 0.22439264 & 4.18x \\ \hline
+	 & Overall Time & 1.88104592 & 0.96081168 & 0.51940344 & 0.45735516 & 4.11x \\ \hline
+	\textbf{3000} & Encryption Time & 1.41060228 & 0.7255222 & 0.38410404 & 0.3369 & 4.19x \\ \hline
+	 & Decryption Time & 1.4089258 & 0.72689044 & 0.38451772 & 0.33783732 & 4.17x \\ \hline
+	 & Overall Time & 2.83086976 & 1.46097024 & 0.77717956 & 0.68406344 & 4.14x \\ \hline
+	\textbf{4000} & Encryption Time & 1.87498956 & 0.98255104 & 0.52236468 & 0.44708772 & 4.19x \\ \hline
+	 & Decryption Time & 1.87756324 & 0.9866046 & 0.52224776 & 0.45145868 & 4.16x \\ \hline
+	 & Overall Time & 3.76213744 & 1.97925 & 1.05276452 & 0.9076462 & 4.15x \\ \hline
+	\textbf{5000} & Encryption Time & 2.34797976 & 1.21547488 & 0.63996784 & 0.55835468 & 4.21x \\ \hline
+	 & Decryption Time & 2.35117576 & 1.22052832 & 0.6975152 & 0.559929 & 4.20x \\ \hline
+	 & Overall Time & 4.70871276 & 2.4440092 & 1.34563036 & 1.12672756 & 4.18x \\ \hline
+	\textbf{6000} & Encryption Time & 2.8022342 & 1.47444388 & 0.7817876 & 0.66855896 & 4.19x \\ \hline
+	 & Decryption Time & 2.8096998 & 1.47175488 & 0.77560952 & 0.67615184 & 4.16x \\ \hline
+	 & Overall Time & 5.6216748 & 2.95597272 & 1.56562592 & 1.35219584 & 4.16x \\ \hline
+\end{tabular}
+\end{landscape} 
+
+
+\begin{landscape}
+\begin{tabular}{ | l | l | l | l | l | l | l | }
+\hline
+	\textbf{Key Size} & \textbf{Segment Type} & \textbf{1 core} & \textbf{2 cores} & \textbf{4 cores} & \textbf{8 cores} & \textbf{Speedup} \\ \hline
+	\textbf{128} & Encryption Time & 0.01744412 & 0.00771176 & 0.00495088 & 0.00477248 & 3.66x \\ \hline
+	 & Decryption Time & 0.01446656 & 0.00718892 & 0.0047454 & 0.00479988 & 3.01x \\ \hline
+	 & Overall Time & 0.03349776 & 0.01610124 & 0.01075044 & 0.01062064 & 3.15x \\ \hline \hline
+	\textbf{256} & Encryption Time & 0.05685824 & 0.02920536 & 0.01735212 & 0.0162128 & 3.51x \\ \hline
+	 & Decryption Time & 0.0531176 & 0.02808028 & 0.0175166 & 0.0163878 & 3.24x \\ \hline
+	 & Overall Time & 0.11153568 & 0.05862836 & 0.036021 & 0.0337508 & 3.31x \\ \hline \hline
+	\textbf{512} & Encryption Time & 0.32565408 & 0.09876696 & 0.096369 & 0.06402796 & 5.09x \\ \hline
+	 & Decryption Time & 0.32293712 & 0.11303592 & 0.09683764 & 0.08386048 & 3.85x \\ \hline
+	 & Overall Time & 0.65054268 & 0.2137714 & 0.19513912 & 0.1497552 & 4.34x \\ \hline \hline
+	\textbf{768} & Encryption Time & 1.0516946 & 0.53718348 & 0.2941692 & 0.26068648 & 4.03x \\ \hline
+	 & Decryption Time & 1.05282916 & 0.54098404 & 0.3156102 & 0.26486876 & 3.98x \\ \hline
+	 & Overall Time & 2.10927176 & 1.08250296 & 0.61428724 & 0.52960552 & 3.98x \\ \hline \hline
+	\textbf{1024} & Encryption Time & 2.3437544 & 1.2055034 & 0.65111192 & 0.56111836 & 4.18x \\ \hline
+	 & Decryption Time & 2.33940148 & 1.20698612 & 0.66276608 & 0.56557168 & 4.14x \\ \hline
+	 & Overall Time & 4.69310056 & 2.42224044 & 1.32380848 & 1.13549232 & 4.13x \\ \hline \hline
+	\textbf{2048} & Encryption Time & 16.83832248 & 8.66942184 & 5.45345 & 3.79430744 & 4.44x \\ \hline
+	 & Decryption Time & 16.83518192 & 7.98278924 & 5.39046672 & 3.79369864 & 4.44x \\ \hline
+	 & Overall Time & 33.75374976 & 16.74329772 & 10.916207 & 7.66389472 & 4.40x \\ \hline
+\end{tabular}
+\end{landscape} 
+
+
+
+\end{document}
+

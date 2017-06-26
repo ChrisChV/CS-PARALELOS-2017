@@ -11,8 +11,6 @@ sem_t * semaforos;
 FILE * pFile;
 
 
-
-
 void * tokenize(void * rank){
 	long my_rank = *((long*)rank);
 	int count = 0;

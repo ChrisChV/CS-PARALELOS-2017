@@ -4,11 +4,13 @@
 #include <gmp.h>
 
 #define RANDOM_SEED_RANGE 50000000
+#define PAR 0
+#define IMPAR 1
 
 typedef struct{
-	mpz_t m;
-	mpz_t e;
-	mpz_t q;
+	char * publicKey;
+	char * privateKey;
+	char * modulus;
 }Keys;
 
 char * getRandom(int size, int seed){
@@ -70,13 +72,70 @@ char * getCoprime(mpz_t n){
 	}while(coprimes(e,n) == 0  && mpz_cmp_si(e,1) != 0);
 	char * res = (char *) malloc(mpz_sizeinbase(e,10));
 	mpz_get_str(res,10,e);
-	mpz_clear(e);
+	//mpz_clear(e);
 	mpz_clear(one);
 	mpz_clear(two);
 	mpz_clear(temp);
 	return res;
 }
 
+int getModulus(mpz_t a, mpz_t b){
+	mpz_t res;
+	mpz_init(res);
+	mpz_mod(res,a,b);
+	char * cc = (char *) malloc(mpz_sizeinbase(res,10));
+	mpz_get_str(cc,10,res);
+	return atoi(cc);
+}
 
 
+int verifyDiv(mpz_t a, mpz_t b){
+	mpz_t res;
+	mpz_init(res);
+	mpz_mod(res,a,b);
+	if(mpz_cmp_si(res,0) == 0) {
+		mpz_clear(res);
+		return PAR;
+	}
+	mpz_clear(res);
+	return IMPAR;
+}
+
+void printMPZ(mpz_t t){
+	mpz_out_str(stdout,10,t);
+	printf("\n");	
+}
+
+char * getNumber(char * number, int actual, int h){
+	char * res = (char *) malloc(h);
+	for(int i = 0; i < h; i++){
+		res[h - i - 1] = number[actual - i];
+	}
+	return res;
+}
+
+char ** divideNumber(char * number, int size, int k, int * h, int * resto){
+	*h = size / k;
+	*resto = size % k;
+	if(*resto != 0) (*h)++;
+	char ** res = (char **) malloc(sizeof(void*) * k);
+	int actual = size - 1;
+	for(int i = 0; i < k; i++){
+		if(i == k - 1){
+			if(*resto == 0){
+				*resto = *h;
+				res[i] = getNumber(number,actual,*h);
+			} 
+			else{
+				*resto = actual + 1;
+				res[i] = getNumber(number,actual,*resto);
+			} 
+		}
+		else{
+			res[i] = getNumber(number,actual,*h);
+			actual -= *h;
+		} 
+	}
+	return res;
+}
 

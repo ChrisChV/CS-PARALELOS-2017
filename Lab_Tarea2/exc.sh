@@ -1,1 +1,1 @@
-mpiexec -n 2 ./run
+mpiexec -n 3 ./run

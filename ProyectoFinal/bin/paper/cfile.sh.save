@@ -1,0 +1,4 @@
+for i in {1..5000}
+do
+  echo -n  >> 5000.txt
+done

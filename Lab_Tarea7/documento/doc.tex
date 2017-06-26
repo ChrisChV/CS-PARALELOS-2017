@@ -1,0 +1,117 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{color}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{vmargin}
+\graphicspath{ {imagenes/} }
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\usepackage{epstopdf}
+
+
+\setpapersize{A4}
+\setmargins{2.5cm}       % margen izquierdo
+{1.5cm}                        % margen superior
+{16.5cm}                      % anchura del texto
+{23.42cm}                    % altura del texto
+{10pt}                           % altura de los encabezados
+{1cm}                           % espacio entre el texto y los encabezados
+{0pt}                             % altura del pie de página
+{2cm}     
+
+\lstset{
+backgroundcolor=\color{lbcolor},
+    tabsize=4,    
+%   rulecolor=,
+    language=[GNU]C++,
+        basicstyle=\tiny,
+        aboveskip={1.5\baselineskip},
+        columns=fixed,
+        showstringspaces=false,
+        extendedchars=false,
+        breaklines=true,
+        prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+        frame=single,
+        showtabs=false,
+        showspaces=false,
+        showstringspaces=false,
+        identifierstyle=\ttfamily,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.026,0.112,0.095},
+        stringstyle=\color{red},
+        numberstyle=\color[rgb]{0.205, 0.142, 0.73},
+%        \lstdefinestyle{C++}{language=C++,style=numbers}’.
+}
+
+
+\begin{document}
+\title{Tiled Matrix Multiplication}
+\author{
+Christofer Fabián Chávez Carazas \\
+\small{Universidad Nacional de San Agustín} \\
+\small{Algoritmos Paralelos}
+}
+
+\maketitle
+
+\section{Problema}
+
+La \textit{Tiled Matrix Multiplication} optimiza el acceso a memoria global de la multiplicación de matrices
+convencional. Esta técnica consiste en dividir la matriz en pequeños bloques llamados \textit{tiles}. En cada \textit{tile},
+los hilos cooperan entre sí para cargar los elementos del \textit{tile} de memoria global a memoria compartida, para luego
+utilizar esos elementos en las operaciones que cada hilo hace. \\
+Para poder optimizar al cien por ciento la multiplicación de matrices, tenemos que resolver dos cuestiones: El tamaño de la
+grilla y el tamaño óptimo de los \textit{tiles}. Sólo los hilos de un mismo bloque pueden acceder a la misma memoria compartida,
+en otras palabras, cada bloque tiene su memoria compartida. Como los hilos van a guardar los valores de una \textit{tile}
+dentro de la memoria compartida, entonces, para que no haya ningún error en las operaciones, el tamaño de la grilla en la
+primera dimensión es $n/TILE\_WIDTH\:x\:n/TILE\_WIDTH$ y en la segunda dimensión es $TILE\_WIDTH\:x\:TILE\_WIDTH$; siendo
+$n$ el tamaño de la matriz (matriz cuadrada) y $TILE\_WIDTH$ el tamaño de los \textit{tiles}.\\
+Para poder conseguir el tamaño óptimo de los \textit{tiles} se necesita saber las propiedades de la tarjeta CUDA, más específico,
+se necesita saber el tamaño de la memoria compartida. Debido a que todo un \textit{tile} es guardado en memoria compartida, entonces
+el tamaño del \textit{tile} no debe exceder al tamaño de la memoria compartida, ni tampoco ser tan pequeño. Para obtener las propiedades
+del dispositivo se utiliza la función $cudaGetDeviceProperties$ a la cual se le pasa por referencia una estructura $cudaDeviceProp$
+en donde se guardarán las propiedades. Luego se obtiene la variable $sharedMemPerBlock$ de esa estructura. \\
+Además de saber el tamaño de la memoria compartida, también se necesita saber cuántos hilos caben en cada bloque, para no entorpecer
+las operaciones en lugar de optimizarlas. Este máximo se consigue con la variable $maxThreadsPerBlock$ de la estructura $cudaDeviceProp$.
+
+\section{Experimento}
+
+Para los experimentos se está usando la GPU de La Salle con las siguientes propiedades:
+
+\begin{itemize}
+ \item $sharedMemPerBlock:49152$
+ \item $maxThreadsPerBlock:1024$
+\end{itemize}
+
+Se eligió 32 como tamaño de los \textit{tiles}, ya que cumple con no sobrepasar el máximo de hilos por bloque ($32 * 32 = 1024$) y
+cumple con no sobrepasar el tamaño de la memoria compartida ($32 * 32 * 4 = 4096$). Los tiempos se muestran en la Tabla \ref{tab:1}.
+Los tiempos están dados en milisegundos. Se puede observar una gran diferencia de tiempo entre el algoritmo \textit{tiled} contra
+el algoritmo convencional.
+
+
+\begin{table}
+{%
+\newcommand{\mc}[3]{\multicolumn{#1}{#2}{#3}}
+\begin{center}
+\begin{tabular}{|l|l|lll}\cline{1-5}
+ & \mc{4}{c|}{\textbf{Tamaño de la matriz}}\\\hline
+ & \textbf{1024} & \mc{1}{l|}{\textbf{2048}} & \mc{1}{l|}{\textbf{4096}} & \mc{1}{l|}{\textbf{8192}}\\\hline
+\textbf{Normal} & 5.187 & \mc{1}{l|}{43.968} & \mc{1}{l|}{358.529} & \mc{1}{l|}{2729.803}\\\hline
+\textbf{Tiled} & 1.906 & \mc{1}{l|}{13.471} & \mc{1}{l|}{105.73} & \mc{1}{l|}{858.096}\\\hline
+\end{tabular}
+\end{center}
+\caption{Tiempos de los algoritmos para la multiplicación de matrices en milisegundos}
+\label{tab:1}
+}%
+
+
+\end{table}
+
+
+
+
+\end{document}
