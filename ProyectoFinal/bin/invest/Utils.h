@@ -107,10 +107,11 @@ void printMPZ(mpz_t t){
 }
 
 char * getNumber(char * number, int actual, int h){
-	char * res = (char *) malloc(h);
+	char * res = (char *) malloc(h + 1);
 	for(int i = 0; i < h; i++){
 		res[h - i - 1] = number[actual - i];
 	}
+	res[h] = '\0';
 	return res;
 }
 

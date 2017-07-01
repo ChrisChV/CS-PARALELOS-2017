@@ -5,15 +5,11 @@
 #include <math.h>
 #include <gmp.h>
 #include "Utils.h"
-#include <omp.h>
+#include <mpi.h>
+#include <pthread.h>
 
 #define CIFRAR 0
 #define DESCIFRAR 1
-
-omp_lock_t mutex;
-
-double secTotal = 0;
-double menor = -1;
 
 char *** opMatrix;
 
@@ -46,7 +42,7 @@ Keys keyGeneration(int size){
 
 	//printf("%d\np->",(int) mpz_sizeinbase(p,2));
 	//mpz_out_str(stdout,10,p);
-	//printf("\n");
+	//f("\n");
 
 	//printf("%d\nq->",(int) mpz_sizeinbase(q,2));
 	//mpz_out_str(stdout,10,q);
@@ -100,100 +96,21 @@ Keys keyGeneration(int size){
 	return res;
 }
 
-/*void parallelMul(mpz_t base, mpz_t n, mpz_t * result){
-	mpz_t res;
-	mpz_t one;
-	mpz_t i;
-	mpz_init(res);
-	mpz_init(one);
-	mpz_init(i);
-	mpz_set_ui(res,1);
-	mpz_set_ui(one,1);
-	mpz_set_ui(i,0);
-	for(;mpz_cmp(n,i) != 0; mpz_add(i,i,one)){
-		mpz_mul(res,res,base);
-	}
-	omp_set_lock(&mutex);
-	mpz_mul(*result,*result,res);
-	omp_unset_lock(&mutex);
 
+typedef struct{
+	int rank;
+	int i_init;
+	int i_end;
+	int h; //H del r - numero de threads - dependiendo de la funcion
+	char * local_exp;
+	char * modulus;
+	char * base_c;
+	char ** base_d;
+	char *** res_c; // resultado para cuando se multiplican los resultados
+	char ** res_d;
+} PthreadArgs;
 
-	mpz_clear(res);
-	mpz_clear(one);
-	mpz_clear(i);
-	
-}
-*/
-
-/*
-void parallelMul(mpz_t base, mpz_t expp, mpz_t modulus, mpz_t * result){
-	mpz_t ress;
-	mpz_init(ress);
-
-	int my_rank = omp_get_thread_num();
-	//printf("Soy->%d\n", my_rank);
-
-	double start_time = omp_get_wtime();
-	//clock_t ini = clock();
-	mpz_powm(ress,base,expp,modulus);
-	//clock_t end = clock();
-	double seconds = omp_get_wtime() - start_time;	
-	//double seconds = (double) (end - ini) / CLOCKS_PER_SEC;
-
-	
-	omp_set_lock(&mutex);
-	if(menor == -1 || menor > seconds) menor = seconds;
-	mpz_mul(*result,*result,ress);
-	omp_unset_lock(&mutex);
-	
-
-	//mpz_clear(res);
-}
-*/
-
-
-
-/*
-void parallelMul(mpz_t base, char ** exps,int size, int k,int h, mpz_t modulus, mpz_t * result){
-	mpz_t local_res;
-	mpz_t local_exp;
-	mpz_t local_r;
-	mpz_init(local_res);
-	mpz_init(local_exp);
-	mpz_init(local_r);
-	mpz_set_ui(local_r,2);
-	int my_rank = omp_get_thread_num();
-	int r = 0;
-
-	if(my_rank == 0) r = 0;
-	else{
-		r = my_rank * h;
-		//printf("saasdasda\n");
-		//r = ((int) pow(2.0,(double) (my_rank - 1)) * size) / k;
-	}
-
-	//printf("R->%d->%d\n", r,my_rank);
-	//printf("R->%d\n", size);
-	mpz_set_str(local_exp,exps[my_rank],2);
-	mpz_pow_ui(local_r,local_r,r);
-	mpz_mul(local_exp,local_exp,local_r);
-
-
-	//clock_t ini = clock();
-	double start_time = omp_get_wtime();
-	mpz_powm(local_res,base,local_exp,modulus);
-	double seconds = omp_get_wtime() - start_time;	
-	//clock_t end = clock();
-	//double seconds = (double) (end - ini) / CLOCKS_PER_SEC;
-
-	omp_set_lock(&mutex);
-	if(menor == -1 || menor > seconds) menor = seconds;
-	mpz_mul(*result,*result,local_res);
-	omp_unset_lock(&mutex);
-}
-*/
-
-void * parallelMul(void * arg){
+void * parallelMulC(void * args){
 	mpz_t local_res;
 	mpz_t m_local_exp;
 	mpz_t local_r;
@@ -206,11 +123,65 @@ void * parallelMul(void * arg){
 	mpz_init(m_modulus);
 	mpz_set_ui(local_r,2);
 
-	int my_rank = 0;
-	int i_init = 0;
-	int i_end = 0;
-	char * local_exp = NULL;
-	char * modulus = NULL;
+	PthreadArgs pArgs = *((PthreadArgs * ) args);
+
+	int my_rank = pArgs.rank;
+	int i_init = pArgs.i_init;
+	int i_end = pArgs.i_end;
+	int h = pArgs.h;
+	char * local_exp = pArgs.local_exp;
+	char * modulus = pArgs.modulus;
+	char * base = pArgs.base_c;
+	int r = 0;
+	if(my_rank == 0) r = 0;
+	else{
+		r = my_rank * h;
+	}
+	mpz_set_str(m_local_exp,local_exp,2);
+
+	mpz_set_str(m_modulus,modulus,10);
+	mpz_pow_ui(local_r,local_r,r);
+	mpz_mul(m_local_exp,m_local_exp,local_r);
+
+	int temp = 0;
+
+	for(int i = i_init; i < i_end; i++){
+		temp = base[i];
+		mpz_set_ui(m_base,temp);
+		mpz_powm(local_res,m_base,m_local_exp,m_modulus);
+		opMatrix[i - i_init][my_rank] = (char *) malloc(mpz_sizeinbase(local_res,10));		
+		mpz_get_str(opMatrix[i - i_init][my_rank],10,local_res);
+	}
+
+	mpz_clear(local_res);
+	mpz_clear(m_local_exp);
+	mpz_clear(local_r);
+	mpz_clear(m_modulus);
+	mpz_clear(m_base);
+}
+
+void * parallelMulD(void * args){
+	mpz_t local_res;
+	mpz_t m_local_exp;
+	mpz_t local_r;
+	mpz_t m_modulus;
+	mpz_t m_base;
+	mpz_init(local_res);
+	mpz_init(m_base);
+	mpz_init(m_local_exp);
+	mpz_init(local_r);
+	mpz_init(m_modulus);
+	mpz_set_ui(local_r,2);
+
+	PthreadArgs pArgs = *((PthreadArgs * ) args);
+
+	int my_rank = pArgs.rank;
+	int i_init = pArgs.i_init;
+	int i_end = pArgs.i_end;
+	int h = pArgs.h;
+	char * local_exp = pArgs.local_exp;
+	char * modulus = pArgs.modulus;
+	char ** base = pArgs.base_d;
 
 	int r = 0;
 	if(my_rank == 0) r = 0;
@@ -220,22 +191,94 @@ void * parallelMul(void * arg){
 	mpz_set_str(m_local_exp,local_exp,2);
 	mpz_set_str(m_modulus,modulus,10);
 	mpz_pow_ui(local_r,local_r,r);
-	mpz_mul(local_exp,local_exp,local_r);
+	mpz_mul(m_local_exp,m_local_exp,local_r);
 
 	for(int i = i_init; i < i_end; i++){
-		
-		mpz_powm(local_res,m_base,local_exp,modulus);
+
+		mpz_set_str(m_base,base[i],10);
+		mpz_powm(local_res,m_base,m_local_exp,m_modulus);
+		opMatrix[i - i_init][my_rank] = (char *) malloc(mpz_sizeinbase(local_res,10));
+		mpz_get_str(opMatrix[i - i_init][my_rank],10,local_res);
+	}
+
+	mpz_clear(local_res);
+	mpz_clear(m_local_exp);
+	mpz_clear(local_r);
+	mpz_clear(m_modulus);
+	mpz_clear(m_base);
+}
+
+void * parallelMulMatrixC(void * args){
+	mpz_t local_res;
+	mpz_t local_num;
+	mpz_t m_modulus;
+	mpz_init(local_res);
+	mpz_init(local_num);
+	mpz_init(m_modulus);
+	mpz_set_ui(local_res,1);
+	PthreadArgs pArgs = *((PthreadArgs * ) args);
+	int my_rank = pArgs.rank;
+	int i_init = pArgs.i_init;
+	int i_end = pArgs.i_end;
+	char * modulus = pArgs.modulus;
+	char *** res = pArgs.res_c;
+	int numThreads = pArgs.h;
+	mpz_set_str(m_modulus,modulus,10);
+	for(int i = i_init; i < i_end; i++){
+		for(int j = 0; j < numThreads; j++){
+			mpz_set_str(local_num,opMatrix[i][j],10);
+			mpz_mul(local_res,local_res,local_num);
+
+		}
+
+		mpz_mod(local_res,local_res,m_modulus);
+		(*res)[i] = (char *) malloc(mpz_sizeinbase(local_res,10));
+		mpz_get_str((*res)[i],10,local_res);
 
 	}
+	mpz_clear(local_res);
+	mpz_clear(local_num);
+	mpz_clear(m_modulus);
+	
+
+}
+
+void * parallelMulMatrixD(void * args){
+	mpz_t local_res;
+	mpz_t local_num;
+	mpz_t m_modulus;
+	mpz_init(local_res);
+	mpz_init(local_num);
+	mpz_init(m_modulus);
+	mpz_set_ui(local_res,1);
+	PthreadArgs pArgs = *((PthreadArgs * ) args);
+	int my_rank = pArgs.rank;
+	int i_init = pArgs.i_init;
+	int i_end = pArgs.i_end;
+	char * modulus = pArgs.modulus;
+	char ** res = pArgs.res_d;
+	int numThreads = pArgs.h;
+	mpz_set_str(m_modulus,modulus,10);
+	char * temp;
+	for(int i = i_init; i < i_end; i++){
+		for(int j = 0; j < numThreads; j++){
+			mpz_set_str(local_num,opMatrix[i][j],10);
+			mpz_mul(local_res,local_res,local_num);
+		}
+		mpz_mod(local_res,local_res,m_modulus);
+		temp = (char *) malloc(mpz_sizeinbase(local_res,10));
+		mpz_get_str(temp,10,local_res);
+		(*res)[i] = atoi(temp);
+	}
+	mpz_clear(local_res);
+	mpz_clear(local_num);
+	mpz_clear(m_modulus);
 }
 
 void cifrar(char * base, int tamBase, Keys keys, int numThreads, char *** res, int mpi_rank, int mpi_size){
 	mpz_t key;
-	mpz_t modulus;
 	mpz_init(key);
-	mpz_init(modulus);
 	mpz_set_str(key,keys.publicKey,10);
-	mpz_set_str(modulus,keys.modulus,10);
 	int sizeExp = mpz_sizeinbase(key,2);
 	char * numberExp = (char *) malloc(sizeExp);
 	mpz_get_str(numberExp,2,key);
@@ -249,194 +292,116 @@ void cifrar(char * base, int tamBase, Keys keys, int numThreads, char *** res, i
 	i_init = mpi_rank * local_n;
 	if(mpi_rank == mpi_size - 1){
 		local_n += tamBase % mpi_size;
-		i_end = tamBase - 1;
+		i_end = tamBase;
 	}
 	else{
 		i_end = i_init + local_n;
 	}
 	llenarMatrix(&opMatrix,local_n,numThreads);
+	(*res) = (char **) malloc(sizeof(void *) * local_n);
+	pthread_t threads[numThreads];
+	PthreadArgs args[numThreads];
 
-
-}
-
-
-/*
-char ** cifrar(char * base, Keys keys, int numThreads, int * tamRes){
-	mpz_t key;
-	mpz_t modulus;
-	mpz_t letra;
-	mpz_t n;
-	mpz_t threads;
-	mpz_t mulResult;
-	int baseSize = (int) strlen(base);
-	int temp = 0;
-
-
-	mpz_init(key);
-	mpz_init(modulus);
-	mpz_init(letra);	
-	mpz_init(threads);
-	mpz_init(n);
-	mpz_init(mulResult);
-	mpz_set_ui(threads,numThreads);
-	mpz_set_ui(mulResult,1);
-	mpz_set_str(key,keys.publicKey,10);
-	mpz_set_str(modulus,keys.modulus,10);
-	mpz_div(n,key,threads);
-
-	char ** res = (char **) malloc(sizeof(void *) * baseSize);
-	omp_init_lock(&mutex);
-
-	secTotal = 0;
-
-	for(int i = 0; i < baseSize; i++){
-		menor = -1;
-		temp = base[i];
-		mpz_set_ui(mulResult,1);
-		mpz_set_ui(letra,temp);
-
-		//#pragma omp parallel num_threads(numThreads)
-		//parallelMul(letra,n,&mulResult);
-		//if(verifyDiv(key,threads) == IMPAR) mpz_mul(mulResult,mulResult,letra);	
-		//mpz_mod(mulResult,mulResult,modulus);
-
-		//mpz_powm(mulResult,letra,key,modulus);
-
-		
-		
-		//#pragma omp parallel num_threads(numThreads)
-		//parallelMul(letra,n,modulus,&mulResult);
-		//int resto = getModulus(key,threads);
-		//for(int i = 0; i < resto; i++){
-		//	mpz_mul(mulResult,mulResult,letra);
-		//}
-		//mpz_mod(mulResult,mulResult,modulus);
-		//secTotal += menor;
-		
-
-
-		int sizeExp = mpz_sizeinbase(key,2);
-		int h = 0;
-		int resto = 0;
-		char * numberExp = (char *) malloc(sizeExp);
-		mpz_get_str(numberExp,2,key);
-		char ** exps = divideNumber(numberExp,sizeExp,numThreads,&h,&resto);
-
-
-		
-		#pragma omp parallel num_threads(numThreads)
-		parallelMul(letra,exps,sizeExp,numThreads,h,modulus,&mulResult);
-		mpz_mod(mulResult,mulResult,modulus);
-		
-
-		secTotal+=menor;
-
-		res[i] = (char*) malloc(mpz_sizeinbase(mulResult,10));
-		
-		mpz_get_str(res[i],10,mulResult);
-
+	for(int i = 0; i < numThreads; i++){
+		args[i].rank = i;
+		args[i].i_init = i_init;
+		args[i].i_end = i_end;
+		args[i].h = h;
+		args[i].local_exp = exps[i];
+		args[i].modulus = keys.modulus;
+		args[i].base_c = base;
+		pthread_create(&threads[i],NULL,parallelMulC,(void *) &args[i]);
 	}
-
-	printf("%lf ", secTotal);
-
-	mpz_clear(key);
-	mpz_clear(modulus);
-	mpz_clear(letra);
-	mpz_clear(n);
-	mpz_clear(threads);
-	mpz_clear(mulResult);
-	*tamRes = baseSize;
-
-	return res;
-
-}
-
-*/
-
-char * descifrar(char ** base, Keys keys, int numThreads, int baseSize){
-	mpz_t key;
-	mpz_t modulus;
-	mpz_t letra;
-	mpz_t n;
-	mpz_t threads;
-	mpz_t mulResult;
-	char * temp;
-
-
-	mpz_init(key);
-	mpz_init(modulus);
-	mpz_init(letra);	
-	mpz_init(threads);
-	mpz_init(n);
-	mpz_init(mulResult);
-	mpz_set_ui(threads,numThreads);
-	mpz_set_ui(mulResult,1);
-	mpz_set_str(key,keys.privateKey,10);
-	mpz_set_str(modulus,keys.modulus,10);
-	mpz_div(n,key,threads);
-
-	char * res = (char*) malloc(baseSize);
-	omp_init_lock(&mutex);
-
-	secTotal = 0;
-	
-	
-	for(int i = 0; i < baseSize; i++){
-		menor = -1;
-		mpz_set_ui(mulResult,1);
-		mpz_set_str(letra,base[i],10);
-
-		//#pragma omp parallel num_threads(numThreads)
-		//parallelMul(letra,n,&mulResult);
-		//if(verifyDiv(key,threads) == IMPAR) mpz_mul(mulResult,mulResult,letra);
-		//mpz_mod(mulResult,mulResult,modulus);
-
-		//mpz_powm(mulResult,letra,key,modulus);
-
-		/*
-		#pragma omp parallel num_threads(numThreads)
-		parallelMul(letra,n,modulus,&mulResult);
-		int resto = getModulus(key,threads);
-		for(int i = 0; i < resto; i++){
-			mpz_mul(mulResult,mulResult,letra);
+	for(int i = 0; i < numThreads; i++){
+		pthread_join(threads[i],NULL);
+	}
+	int characterPerThread = local_n / numThreads;
+	for(int i = 0; i < numThreads; i++){
+		args[i].i_init = i * characterPerThread;
+		if(i == numThreads - 1){
+			args[i].i_end = local_n;
+			//args[i].h = characterPerThread + (local_n % numThreads);
 		}
-		mpz_mod(mulResult,mulResult,modulus);
-		secTotal += menor;
-		*/
+		else{
+			args[i].i_end = args[i].i_init + characterPerThread;
+			//args[i].h = characterPerThread;
+		}
+		args[i].res_c = res;
+		args[i].h = numThreads;
 
-		int sizeExp = mpz_sizeinbase(key,2);
-		int h = 0;
-		int resto = 0;
-		char * numberExp = (char *) malloc(sizeExp);
-		mpz_get_str(numberExp,2,key);
-		char ** exps = divideNumber(numberExp,sizeExp,numThreads,&h,&resto);
+		pthread_create(&threads[i],NULL,parallelMulMatrixC,(void *) &args[i]);
 
-		
-		#pragma omp parallel num_threads(numThreads)
-		parallelMul(letra,exps,sizeExp,numThreads,h,modulus,&mulResult);
-		mpz_mod(mulResult,mulResult,modulus);
-		
-
-		secTotal+=menor;
-
-
-
-		temp = (char *) malloc(mpz_sizeinbase(mulResult,10));
-		mpz_get_str(temp,10,mulResult);
-//		printf("%s\n", temp);
-		res[i] = atoi(temp);
-		// free(temp);
 	}
-	
-	printf("%lf ", secTotal);
 
-	mpz_clear(key);
-	mpz_clear(modulus);
-	mpz_clear(letra);
-	mpz_clear(n);
-	mpz_clear(threads);
-	mpz_clear(mulResult);
+	for(int i = 0; i < numThreads; i++){
+		pthread_join(threads[i],NULL);
+	}
 
-	return res;
+
+	//for(int i = 0; i < local_n; i++){
+	//	printf("%s\n", (*res)[i]);
+	//}
+}
+
+void descifrar(char ** base, int tamBase, Keys keys, int numThreads, char ** res, int mpi_rank, int mpi_size){
+	mpz_t key;
+	mpz_init(key);
+	mpz_set_str(key,keys.privateKey,10);
+	int sizeExp = mpz_sizeinbase(key,2);
+	char * numberExp = (char *) malloc(sizeExp);
+	mpz_get_str(numberExp,2,key);
+	int h = 0;
+	int resto = 0;
+	char ** exps = divideNumber(numberExp,sizeExp,numThreads,&h,&resto);
+	int local_n = 0; // numero de caracteres que va a operar el nodo
+	int i_init = 0;
+	int i_end = 0;
+	local_n = tamBase / mpi_size;
+	i_init = mpi_rank * local_n;
+	if(mpi_rank == mpi_size - 1){
+		local_n += tamBase % mpi_size;
+		i_end = tamBase;
+	}
+	else{
+		i_end = i_init + local_n;
+	}
+	llenarMatrix(&opMatrix,local_n,numThreads);
+	(*res) = (char *) malloc(local_n);
+	pthread_t threads[numThreads];
+	PthreadArgs args[numThreads];
+	for(int i = 0; i < numThreads; i++){
+		args[i].rank = i;
+		args[i].i_init = i_init;
+		args[i].i_end = i_end;
+		args[i].h = h;
+		args[i].local_exp = exps[i];
+		args[i].modulus = keys.modulus;
+		args[i].base_d = base;
+		pthread_create(&threads[i],NULL,parallelMulD,(void *) &args[i]);
+	}
+
+	for(int i = 0; i < numThreads; i++){
+		pthread_join(threads[i],NULL);
+	}
+
+	int characterPerThread = local_n / numThreads;
+	for(int i = 0; i < numThreads; i++){
+		args[i].i_init = i * characterPerThread;
+		if(i == numThreads - 1){
+			args[i].i_end = local_n;
+			//args[i].h = characterPerThread + (local_n % numThreads);
+		}
+		else{
+			args[i].i_end = i_init + characterPerThread;
+			//args[i].h = characterPerThread;
+		}
+		args[i].res_d = res;
+		args[i].h = numThreads;
+		pthread_create(&threads[i],NULL,parallelMulMatrixD,(void *) &args[i]);
+	}
+
+	for(int i = 0; i < numThreads; i++){
+		pthread_join(threads[i],NULL);
+	}	
 }
 
