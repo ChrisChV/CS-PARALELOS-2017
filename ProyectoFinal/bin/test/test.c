@@ -91,7 +91,7 @@ int main(){
 	count[0] = sizeof(char *) * 2;
 	count[1] = sizeof(char *) * 2;
 	displ[0] = 0;
-	displ[1] = sizeof(char *) * 2 ;
+	displ[1] = sizeof(char *) * 2;
 	//b[0] = (char *) malloc(2);
 	//b[1] = (char *) malloc(2);
 	//MPI_Allgather(&(a[0]),1,MPI_CHAR,&(b[0]),1,MPI_CHAR,MPI_COMM_WORLD);

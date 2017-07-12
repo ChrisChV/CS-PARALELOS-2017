@@ -7,6 +7,12 @@
 //Time desencriptacion
 //Time keyGeneration
 
+/**
+	TODO 
+	-Hacer que las keys se generen en el nodo 0 y se repartan para todos.
+	-Mejorar las funciones de paralelizacion.
+	-PRUEBAS
+**/
 
 void printCypher(char ** cypher, int tamC){
 	int tamL = 0;
@@ -42,8 +48,10 @@ void allgather(char *** cypher, char ** res, int tamBase, int n, int local_n, in
 	int * count = (int *) malloc(sizeof(int) * mpi_size);
 	int * displ  = (int *) malloc(sizeof(int) * mpi_size);
 	for(int i = 0; i < mpi_size; i++){
-		count[i] = local_n;
+		if(i == mpi_size - 1) count[i] =  n + (tamBase % mpi_size);
+		else count[i] = n;
 		displ[i] = i * n;
+
 	}
 	MPI_Allgatherv(local_size,local_n,MPI_INT,sizes,count,displ,MPI_INT,MPI_COMM_WORLD);
 
@@ -55,6 +63,7 @@ void allgather(char *** cypher, char ** res, int tamBase, int n, int local_n, in
 		(*cypher)[i] = (char *) malloc(sizes[i]);
 
 		bcast_rank = i / n;
+		if(bcast_rank == mpi_size) bcast_rank--;
 		if(bcast_rank == my_rank){
 			(*cypher)[i] = res[i- i_init];
 			(*cypher)[i][sizes[i] - 1] = '\0';
@@ -82,10 +91,19 @@ int main(int argc, char **argv){
 	int tamNumber = atoi(argv[2]);
 	char * file = argv[3];
 	char * cc = getFile(file,&tamBase);
-	char ** res = NULL;
+	char ** res_c = NULL;
+	char * res_d = NULL;
+
 	Keys keys = keyGeneration(tamNumber);
 
-	cifrar(cc,tamBase,keys,numThreads,&res,my_rank,mpi_size);
+	if(my_rank == 0){
+		printf("TamBase->%d\n", tamBase);
+		printf("Modulus->%s\n", keys.modulus);
+		printf("public->%s\n", keys.publicKey);
+		printf("private->%s\n", keys.privateKey);	
+	}
+
+	cifrar(cc,tamBase,keys,numThreads,&res_c,my_rank,mpi_size);
 
 
 	int n = tamBase / mpi_size;
@@ -93,29 +111,44 @@ int main(int argc, char **argv){
 	if(my_rank == mpi_size - 1){
 		local_n += tamBase % mpi_size;
 	}
-	
-	int * count = (int *) malloc(sizeof(int) * mpi_size);
-	int * displ  = (int *) malloc(sizeof(int) * mpi_size);
-	for(int i = 0; i < mpi_size; i++){
-		count[i] = sizeof(char *) * local_n;
-		displ[i] = i * sizeof(char *) * n;
-	}
+
+
 
 	char ** cypher = (char **) malloc(sizeof(void *) * tamBase);
 	for(int i = 0; i < tamBase; i++){
 		cypher[i] = NULL;
 	}
-	for(int i = 0; i < local_n; i++){
-		printf("%s\n", res[i]);
-	}
-	printf("\n");
-	allgather(&cypher,res,tamBase,n,local_n,mpi_size,my_rank);
+	allgather(&cypher,res_c,tamBase,n,local_n,mpi_size,my_rank);
+
 	if(my_rank == 0){
+		printf("Cypher->\n");
 		for(int i = 0; i < tamBase; i++){
 			printf("%s\n", cypher[i]);
 		}
+		printf("\n");
 	}
 
+
+	descifrar(cypher,tamBase,keys,numThreads,&res_d, my_rank, mpi_size);
+
+	char * descypher = (char *) malloc(tamBase);
+
+	int * count = (int *) malloc(sizeof(int) * mpi_size);
+	int * displ  = (int *) malloc(sizeof(int) * mpi_size);
+	for(int i = 0; i < mpi_size; i++){
+		if(i == mpi_size - 1) count[i] = n + (tamBase % mpi_size);
+		else count[i] = n;
+		displ[i] = i * n;
+	}
+
+	MPI_Allgatherv(res_d,local_n,MPI_CHAR,descypher,count,displ,MPI_CHAR,MPI_COMM_WORLD);
+
+	descypher = (char *) realloc(descypher,tamBase + 1);
+	descypher[tamBase] = '\0';
+
+	if(my_rank == 0){
+		printf("%s\n", descypher);
+	}
 
 
 

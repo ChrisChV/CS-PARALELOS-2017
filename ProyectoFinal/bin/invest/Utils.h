@@ -147,7 +147,15 @@ void llenarMatrix(char **** matrix, int rows, int columns){
 	}
 }
 
-
+void printMatrix(char *** matrix, int rows, int columns){
+	for(int i = 0; i < rows; i++){
+		for(int j = 0; j < columns; j++){
+			printf("%s ", matrix[i][j]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+}
 
 
 

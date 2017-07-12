@@ -225,12 +225,11 @@ void * parallelMulMatrixC(void * args){
 	int numThreads = pArgs.h;
 	mpz_set_str(m_modulus,modulus,10);
 	for(int i = i_init; i < i_end; i++){
+		mpz_set_ui(local_res,1);
 		for(int j = 0; j < numThreads; j++){
 			mpz_set_str(local_num,opMatrix[i][j],10);
 			mpz_mul(local_res,local_res,local_num);
-
 		}
-
 		mpz_mod(local_res,local_res,m_modulus);
 		(*res)[i] = (char *) malloc(mpz_sizeinbase(local_res,10));
 		mpz_get_str((*res)[i],10,local_res);
@@ -261,6 +260,7 @@ void * parallelMulMatrixD(void * args){
 	mpz_set_str(m_modulus,modulus,10);
 	char * temp;
 	for(int i = i_init; i < i_end; i++){
+		mpz_set_ui(local_res,1);
 		for(int j = 0; j < numThreads; j++){
 			mpz_set_str(local_num,opMatrix[i][j],10);
 			mpz_mul(local_res,local_res,local_num);
@@ -315,6 +315,9 @@ void cifrar(char * base, int tamBase, Keys keys, int numThreads, char *** res, i
 	for(int i = 0; i < numThreads; i++){
 		pthread_join(threads[i],NULL);
 	}
+
+	if(mpi_rank == 0) printMatrix(opMatrix,local_n,numThreads);	
+
 	int characterPerThread = local_n / numThreads;
 	for(int i = 0; i < numThreads; i++){
 		args[i].i_init = i * characterPerThread;
@@ -358,6 +361,7 @@ void descifrar(char ** base, int tamBase, Keys keys, int numThreads, char ** res
 	int i_end = 0;
 	local_n = tamBase / mpi_size;
 	i_init = mpi_rank * local_n;
+
 	if(mpi_rank == mpi_size - 1){
 		local_n += tamBase % mpi_size;
 		i_end = tamBase;
@@ -392,7 +396,7 @@ void descifrar(char ** base, int tamBase, Keys keys, int numThreads, char ** res
 			//args[i].h = characterPerThread + (local_n % numThreads);
 		}
 		else{
-			args[i].i_end = i_init + characterPerThread;
+			args[i].i_end = args[i].i_init + characterPerThread;
 			//args[i].h = characterPerThread;
 		}
 		args[i].res_d = res;
@@ -403,5 +407,6 @@ void descifrar(char ** base, int tamBase, Keys keys, int numThreads, char ** res
 	for(int i = 0; i < numThreads; i++){
 		pthread_join(threads[i],NULL);
 	}	
+
 }
 
