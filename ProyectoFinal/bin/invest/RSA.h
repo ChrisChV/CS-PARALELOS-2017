@@ -1,10 +1,11 @@
-#include <stdio.h>
+	#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
 #include <gmp.h>
 #include "Utils.h"
+#include "timer.h"
 #include <mpi.h>
 #include <pthread.h>
 
@@ -132,6 +133,10 @@ void * parallelMulC(void * args){
 	char * local_exp = pArgs.local_exp;
 	char * modulus = pArgs.modulus;
 	char * base = pArgs.base_c;
+
+	struct timespec start, finish;
+	double * elapsed = (double *) malloc(sizeof(double));
+
 	int r = 0;
 	if(my_rank == 0) r = 0;
 	else{
@@ -145,6 +150,8 @@ void * parallelMulC(void * args){
 
 	int temp = 0;
 
+	//GET_TIME(ini);
+	clock_gettime(CLOCK_MONOTONIC, &start);
 	for(int i = i_init; i < i_end; i++){
 		temp = base[i];
 		mpz_set_ui(m_base,temp);
@@ -152,12 +159,19 @@ void * parallelMulC(void * args){
 		opMatrix[i - i_init][my_rank] = (char *) malloc(mpz_sizeinbase(local_res,10));		
 		mpz_get_str(opMatrix[i - i_init][my_rank],10,local_res);
 	}
+	clock_gettime(CLOCK_MONOTONIC, &finish);
+	//GET_TIME(end);
 
 	mpz_clear(local_res);
 	mpz_clear(m_local_exp);
 	mpz_clear(local_r);
 	mpz_clear(m_modulus);
 	mpz_clear(m_base);
+
+	//*total = end - ini;
+	*elapsed = (finish.tv_sec - start.tv_sec);
+	*elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+	return (void *) elapsed;
 }
 
 void * parallelMulD(void * args){
@@ -182,6 +196,9 @@ void * parallelMulD(void * args){
 	char * local_exp = pArgs.local_exp;
 	char * modulus = pArgs.modulus;
 	char ** base = pArgs.base_d;
+	
+	struct timespec start, finish;
+	double * elapsed = (double *) malloc(sizeof(double));
 
 	int r = 0;
 	if(my_rank == 0) r = 0;
@@ -193,6 +210,8 @@ void * parallelMulD(void * args){
 	mpz_pow_ui(local_r,local_r,r);
 	mpz_mul(m_local_exp,m_local_exp,local_r);
 
+	//GET_TIME(ini);
+	clock_gettime(CLOCK_MONOTONIC, &start);
 	for(int i = i_init; i < i_end; i++){
 
 		mpz_set_str(m_base,base[i],10);
@@ -200,12 +219,20 @@ void * parallelMulD(void * args){
 		opMatrix[i - i_init][my_rank] = (char *) malloc(mpz_sizeinbase(local_res,10));
 		mpz_get_str(opMatrix[i - i_init][my_rank],10,local_res);
 	}
+	//GET_TIME(end);
+	clock_gettime(CLOCK_MONOTONIC, &finish);
 
 	mpz_clear(local_res);
 	mpz_clear(m_local_exp);
 	mpz_clear(local_r);
 	mpz_clear(m_modulus);
 	mpz_clear(m_base);
+
+	//*total = end - ini;
+	*elapsed = (finish.tv_sec - start.tv_sec);
+	*elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+	return (void *) elapsed;
+
 }
 
 void * parallelMulMatrixC(void * args){
@@ -220,10 +247,18 @@ void * parallelMulMatrixC(void * args){
 	int my_rank = pArgs.rank;
 	int i_init = pArgs.i_init;
 	int i_end = pArgs.i_end;
+
+	struct timespec start, finish;
+	double * elapsed = (double *) malloc(sizeof(double));
+
+
 	char * modulus = pArgs.modulus;
 	char *** res = pArgs.res_c;
 	int numThreads = pArgs.h;
 	mpz_set_str(m_modulus,modulus,10);
+
+	//GET_TIME(ini);
+	clock_gettime(CLOCK_MONOTONIC, &start);
 	for(int i = i_init; i < i_end; i++){
 		mpz_set_ui(local_res,1);
 		for(int j = 0; j < numThreads; j++){
@@ -235,11 +270,17 @@ void * parallelMulMatrixC(void * args){
 		mpz_get_str((*res)[i],10,local_res);
 
 	}
+	//GET_TIME(end);
+	clock_gettime(CLOCK_MONOTONIC, &finish);
+
 	mpz_clear(local_res);
 	mpz_clear(local_num);
 	mpz_clear(m_modulus);
 	
-
+	//*total = end - ini;
+	*elapsed = (finish.tv_sec - start.tv_sec);
+	*elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+	return (void *) elapsed;
 }
 
 void * parallelMulMatrixD(void * args){
@@ -259,6 +300,12 @@ void * parallelMulMatrixD(void * args){
 	int numThreads = pArgs.h;
 	mpz_set_str(m_modulus,modulus,10);
 	char * temp;
+
+	struct timespec start, finish;
+	double * elapsed = (double *) malloc(sizeof(double));
+
+	//GET_TIME(ini);
+	clock_gettime(CLOCK_MONOTONIC, &start);
 	for(int i = i_init; i < i_end; i++){
 		mpz_set_ui(local_res,1);
 		for(int j = 0; j < numThreads; j++){
@@ -270,12 +317,26 @@ void * parallelMulMatrixD(void * args){
 		mpz_get_str(temp,10,local_res);
 		(*res)[i] = atoi(temp);
 	}
+	//GET_TIME(end);
+	clock_gettime(CLOCK_MONOTONIC, &finish);
+
 	mpz_clear(local_res);
 	mpz_clear(local_num);
 	mpz_clear(m_modulus);
+
+	//*total = end - ini;
+	*elapsed = (finish.tv_sec - start.tv_sec);
+	*elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+	return (void *) elapsed;
 }
 
-void cifrar(char * base, int tamBase, Keys keys, int numThreads, char *** res, int mpi_rank, int mpi_size){
+double cifrar(char * base, int tamBase, Keys keys, int numThreads, char *** res, int mpi_rank, int mpi_size){
+	double timeIni = 0;
+	double timeEnd = 0;
+	double  * buff = (double*) malloc(sizeof(double));
+	double mayor = -1;
+	double total = 0;
+
 	mpz_t key;
 	mpz_init(key);
 	mpz_set_str(key,keys.publicKey,10);
@@ -302,6 +363,8 @@ void cifrar(char * base, int tamBase, Keys keys, int numThreads, char *** res, i
 	pthread_t threads[numThreads];
 	PthreadArgs args[numThreads];
 
+
+	//GET_TIME(timeIni);
 	for(int i = 0; i < numThreads; i++){
 		args[i].rank = i;
 		args[i].i_init = i_init;
@@ -313,11 +376,20 @@ void cifrar(char * base, int tamBase, Keys keys, int numThreads, char *** res, i
 		pthread_create(&threads[i],NULL,parallelMulC,(void *) &args[i]);
 	}
 	for(int i = 0; i < numThreads; i++){
-		pthread_join(threads[i],NULL);
+		pthread_join(threads[i],(void **) &buff);
+		if(mayor == -1 || mayor < *buff){
+			mayor = *buff;
+		}
 	}
+	//GET_TIME(timeEnd);
+	//total += timeEnd -timeIni;
+	total += mayor;
+	mayor = -1;
 
-	if(mpi_rank == 0) printMatrix(opMatrix,local_n,numThreads);	
 
+	//if(mpi_rank == 0) printMatrix(opMatrix,local_n,numThreads);	
+
+//	GET_TIME(timeIni);
 	int characterPerThread = local_n / numThreads;
 	for(int i = 0; i < numThreads; i++){
 		args[i].i_init = i * characterPerThread;
@@ -337,16 +409,28 @@ void cifrar(char * base, int tamBase, Keys keys, int numThreads, char *** res, i
 	}
 
 	for(int i = 0; i < numThreads; i++){
-		pthread_join(threads[i],NULL);
+		pthread_join(threads[i],(void **) &buff);
+		if(mayor == -1 || mayor < *buff){
+			mayor = *buff;
+		}
 	}
-
+//	GET_TIME(timeEnd);
+//	total += timeEnd - timeIni;
+	total += mayor;
+	return total;
 
 	//for(int i = 0; i < local_n; i++){
 	//	printf("%s\n", (*res)[i]);
 	//}
 }
 
-void descifrar(char ** base, int tamBase, Keys keys, int numThreads, char ** res, int mpi_rank, int mpi_size){
+double descifrar(char ** base, int tamBase, Keys keys, int numThreads, char ** res, int mpi_rank, int mpi_size){
+	double timeIni = 0;
+	double timeEnd = 0;
+	double total = 0;
+	double * buff = (double*) malloc(sizeof(double));
+	double mayor = -1;
+
 	mpz_t key;
 	mpz_init(key);
 	mpz_set_str(key,keys.privateKey,10);
@@ -373,6 +457,9 @@ void descifrar(char ** base, int tamBase, Keys keys, int numThreads, char ** res
 	(*res) = (char *) malloc(local_n);
 	pthread_t threads[numThreads];
 	PthreadArgs args[numThreads];
+
+
+	//GET_TIME(timeIni);
 	for(int i = 0; i < numThreads; i++){
 		args[i].rank = i;
 		args[i].i_init = i_init;
@@ -385,8 +472,15 @@ void descifrar(char ** base, int tamBase, Keys keys, int numThreads, char ** res
 	}
 
 	for(int i = 0; i < numThreads; i++){
-		pthread_join(threads[i],NULL);
+		pthread_join(threads[i],(void **) &buff);
+		if(mayor == -1 || mayor < *buff){
+			mayor = *buff;
+		}
 	}
+	total += mayor;
+	mayor = -1;
+
+
 
 	int characterPerThread = local_n / numThreads;
 	for(int i = 0; i < numThreads; i++){
@@ -405,8 +499,15 @@ void descifrar(char ** base, int tamBase, Keys keys, int numThreads, char ** res
 	}
 
 	for(int i = 0; i < numThreads; i++){
-		pthread_join(threads[i],NULL);
+		pthread_join(threads[i],(void **) &buff);
+		if(mayor == -1 || mayor < *buff){
+			mayor = *buff;
+		}
 	}	
+	//GET_TIME(timeEnd);
+	//total = timeEnd - timeIni;
+	total += mayor;
+	return total;	
 
 }
 

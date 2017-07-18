@@ -3,6 +3,7 @@
 #include <string.h>
 #include "RSA.h"
 
+
 //Time encriptacion
 //Time desencriptacion
 //Time keyGeneration
@@ -76,6 +77,10 @@ void allgather(char *** cypher, char ** res, int tamBase, int n, int local_n, in
 }
 
 
+/**
+	
+**/
+
 int main(int argc, char **argv){
 	if(argc != 4){
 		printf("Faltan argumentos <numThreads> <tamNumber> <file>\n");
@@ -86,25 +91,66 @@ int main(int argc, char **argv){
 	MPI_Init(NULL,NULL);
 	MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);
 	MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
-	int tamBase = 0;
+	
 	int numThreads = atoi(argv[1]);
 	int tamNumber = atoi(argv[2]);
+	double timeSpend = 0;
 	char * file = argv[3];
-	char * cc = getFile(file,&tamBase);
+	
 	char ** res_c = NULL;
 	char * res_d = NULL;
 
-	Keys keys = keyGeneration(tamNumber);
+	Keys keys;
+	int tamBase = 0;
+	double timeMax = 0;
+	double tk = 0;
+	char * cc = NULL;
+	int * tamKeys = (int *) malloc(sizeof(int) * 3);
 
+	//Se generan las keys, el mensaje y el tamBase en el nodo 0 y luego se distribuye a los demas.	
+	if(my_rank == 0){
+		clock_t ini = clock();
+		keys = keyGeneration(tamNumber);
+		clock_t end = clock();
+		tk = (double)(end - ini) / CLOCKS_PER_SEC;
+		tamKeys[0] = (int) strlen(keys.publicKey);
+		tamKeys[1] = (int) strlen(keys.privateKey);
+		tamKeys[2] = (int) strlen(keys.modulus);
+		cc = getFile(file,&tamBase);
+	}
+	MPI_Bcast(tamKeys,3,MPI_INT,0,MPI_COMM_WORLD);
+	MPI_Bcast(&tamBase,1,MPI_INT,0,MPI_COMM_WORLD);
+	if(my_rank != 0){
+		keys.publicKey = (char *) malloc(tamKeys[0]);
+		keys.privateKey = (char *) malloc(tamKeys[1]);
+		keys.modulus = (char *) malloc(tamKeys[2]);
+		cc = (char *) malloc(tamBase);
+	}
+	MPI_Bcast(keys.publicKey,tamKeys[0],MPI_CHAR,0,MPI_COMM_WORLD);
+	MPI_Bcast(keys.privateKey,tamKeys[1],MPI_CHAR,0,MPI_COMM_WORLD);
+	MPI_Bcast(keys.modulus,tamKeys[2],MPI_CHAR,0,MPI_COMM_WORLD);
+	MPI_Bcast(cc,tamBase,MPI_CHAR,0,MPI_COMM_WORLD);
+
+	/*
 	if(my_rank == 0){
 		printf("TamBase->%d\n", tamBase);
 		printf("Modulus->%s\n", keys.modulus);
 		printf("public->%s\n", keys.publicKey);
 		printf("private->%s\n", keys.privateKey);	
 	}
+	*/
 
-	cifrar(cc,tamBase,keys,numThreads,&res_c,my_rank,mpi_size);
+//	clock_t begin = clock();
 
+	timeSpend = cifrar(cc,tamBase,keys,numThreads,&res_c,my_rank,mpi_size);
+
+//	clock_t end = clock();
+
+//	double timeSpend = (double)(end - begin) / CLOCKS_PER_SEC;
+	
+
+	MPI_Reduce(&timeSpend, &timeMax, 1, MPI_DOUBLE, MPI_MAX,0,MPI_COMM_WORLD);
+	if(my_rank == 0) printf("%lf ",timeMax);
 
 	int n = tamBase / mpi_size;
 	int local_n = n;
@@ -113,13 +159,13 @@ int main(int argc, char **argv){
 	}
 
 
-
 	char ** cypher = (char **) malloc(sizeof(void *) * tamBase);
 	for(int i = 0; i < tamBase; i++){
 		cypher[i] = NULL;
 	}
 	allgather(&cypher,res_c,tamBase,n,local_n,mpi_size,my_rank);
 
+/*
 	if(my_rank == 0){
 		printf("Cypher->\n");
 		for(int i = 0; i < tamBase; i++){
@@ -127,9 +173,17 @@ int main(int argc, char **argv){
 		}
 		printf("\n");
 	}
+*/
 
+//	begin = clock();
 
-	descifrar(cypher,tamBase,keys,numThreads,&res_d, my_rank, mpi_size);
+	timeSpend = descifrar(cypher,tamBase,keys,numThreads,&res_d, my_rank, mpi_size);
+
+//	end = clock();
+
+//	timeSpend = (double)(end - begin) / CLOCKS_PER_SEC;
+	MPI_Reduce(&timeSpend, &timeMax, 1, MPI_DOUBLE, MPI_MAX,0,MPI_COMM_WORLD);
+	if(my_rank 	== 0) printf("%lf ",timeMax);
 
 	char * descypher = (char *) malloc(tamBase);
 
@@ -146,133 +200,14 @@ int main(int argc, char **argv){
 	descypher = (char *) realloc(descypher,tamBase + 1);
 	descypher[tamBase] = '\0';
 
-	if(my_rank == 0){
-		printf("%s\n", descypher);
-	}
-
-
-
-
-
-	/*	
-	if(my_rank == 0){
-		for(int i = 0; i < local_n; i++){
-			printf("%s\n", res[i]);
-		}
-		printf("\n");
-	}
-	*/
-
-	/*
-	char ** temp = (char **) malloc(sizeof(void *) * 1);
-
-	
-	temp[0] = (char *) malloc(strlen(res[0]) + 1);
-	for(int i = 0; i < strlen(res[0]); i++){
-		temp[0][i] = res[0][i];
-	}
-	temp[0][strlen(res[0])] = '\0';
-	
-	temp[0] = (char *) malloc(2);
-	char c = 'a';
-	char nu = '\0';
-	temp[0][0] = c;
-	temp[0][1] = nu;
-	
-
-	//printf("%s\n", temp[0]);
-	char ** temp2 = (char **) malloc(sizeof(void *) * 1);
-
-	
-	if(my_rank == 1){
-		MPI_Send(temp,sizeof(char *),MPI_CHAR,0,0,MPI_COMM_WORLD);
-	}
-	else{
-		MPI_Recv(temp2,sizeof(char *), MPI_CHAR,1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-	}
-
-	//TODO Esta pendejada no funciona. Copia por separado.
-	//MPI_Allgather(res,sizeof(char *) * local_n, MPI_CHAR, cypher, sizeof(char *) * local_n, MPI_CHAR, MPI_COMM_WORLD);
-
-//	if(my_rank == 1) printf("%s\n", cypher[5]);
-
-	//MPI_Barrier(MPI_COMM_WORLD);
 
 	if(my_rank == 0){
-		//if(cypher[5] == NULL) printf("dsadasdsa\n");
-		//cypher[5][0] = 's';
-		//for(int i = 0; i < tamBase; i++){
-		//	printf("%s\n", cypher[i]);
-		//}
-		//for(int i = 0; i < local_n; i++){
-		//	printf("%s\n", temp[i]);
-		//}
-		printf("%s\n", temp2[0]);
+		//printf("%s\n", descypher);
+		printf("%lf\n",tk);
 	}
-	*/
-	
-}
 
-/*
-int main(int argc, char ** argv){
-	if(argc != 4){
-		printf("Faltan argumentos <numThreads> <tamNumber> <file>\n");
-		return 0;
-	}
-	int numThreads = atoi(argv[1]);
-	int tamNumber = atoi(argv[2]);
-	char * file = argv[3];
-	char * cc = getFile(file);
-	clock_t keyGini = clock();
-	Keys keys = keyGeneration(tamNumber);
-	clock_t keyGend = clock();
-	int tamCypher = 0;
-	//clock_t cifrarIni = clock();
-	char ** cypher = cifrar(cc,keys,numThreads,&tamCypher);
-	//clock_t cifrarEnd = clock();
-	//printf("ENCRIPTADO\n");
-	//clock_t descifrarIni = clock();
-	char * res = descifrar(cypher, keys, numThreads, tamCypher);
-	//clock_t descifrarEnd = clock();
-	//printf("%s\n",res);
-	double key = (double) (keyGend - keyGini) / CLOCKS_PER_SEC;
-	//double ci = (double) (cifrarEnd - cifrarIni) / CLOCKS_PER_SEC;
-	//ouble deci = (double) (descifrarEnd - descifrarIni) / CLOCKS_PER_SEC;
-	printf("%lf\n", key);
-	//printf("C->%lf\n", ci);
-	//printf("D->%lf\n", deci);
+	MPI_Finalize();
 }
-*/
-
-/*
-int main(){
-	mpz_t test;
-	mpz_t divi;
-	mpz_t mod;
-	mpz_init(test);
-	mpz_init(divi);
-	mpz_init(mod);
-	mpz_set_ui(divi,1000000000);
-	mpz_set_str(test,"28371283712833435",10);
-	mpz_set_str(mod,"21212132",10);
-	int size = mpz_sizeinbase(test,2);
-	char * number = (char *) malloc(size);
-	mpz_get_str(number,2,test);
-	printf("%d\n", size);
-	printf("%s\n", number);
-	int k = 1;
-	int h = 0;
-	int resto = 0;
-	char ** res = divideNumber(number,size,k,&h,&resto);
-	for(int i = 0; i < k; i++){
-		printf("%s\n", res[i]);
-	}
-	mpz_set_str(mod,number,2);
-	mpz_out_str(stdout,2,mod);
-	printf("\n");
-
-}
-*/
 
 
 

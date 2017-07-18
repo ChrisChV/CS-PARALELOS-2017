@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.6.4)  6 JUN 2017 15:15
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.6.4)  17 JUL 2017 20:11
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1248,18 +1248,18 @@ LaTeX Font Warning: Font shape `OT1/cmss/m/n' in size <4> not available
 ] [3
 
 ]
-LaTeX Font Info:    Try loading font information for U+msa on input line 57.
+LaTeX Font Info:    Try loading font information for U+msa on input line 59.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 57.
+LaTeX Font Info:    Try loading font information for U+msb on input line 59.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Try loading font information for OT1+mathkerncmss on input 
-line 57.
+line 59.
 
 (/usr/share/texlive/texmf-dist/tex/latex/sansmathaccent/ot1mathkerncmss.fd
 File: ot1mathkerncmss.fd 2013/03/27 Fontinst v1.933 font definitions for OT1/ma
@@ -1273,7 +1273,7 @@ thkerncmss.
 File: imagenes/1.png Graphic file (type png)
 
 <use imagenes/1.png>
-Package pdftex.def Info: imagenes/1.png used on input line 82.
+Package pdftex.def Info: imagenes/1.png used on input line 84.
 (pdftex.def)             Requested size: 220.32259pt x 36.63676pt.
  [6
 
@@ -1283,33 +1283,40 @@ Package pdftex.def Info: imagenes/1.png used on input line 82.
 
 ] [9
 
+] [10
+
 ]
-<imagenes/2.png, id=278, 1216.545pt x 667.49374pt>
-File: imagenes/2.png Graphic file (type png)
- <use imagenes/2.png>
-Package pdftex.def Info: imagenes/2.png used on input line 126.
-(pdftex.def)             Requested size: 304.1355pt x 166.87303pt.
+<imagenes/4.png, id=302, 244.915pt x 247.92625pt>
+File: imagenes/4.png Graphic file (type png)
+ <use imagenes/4.png>
+Package pdftex.def Info: imagenes/4.png used on input line 129.
+(pdftex.def)             Requested size: 146.95012pt x 148.7569pt.
+ [11
 
-Overfull \hbox (13.39287pt too wide) in paragraph at lines 126--126
- [] 
- []
+ <./imagenes/4.png>] [12
 
-[10
+] [13
 
- <./imagenes/2.png>] <imagenes/3.png, id=305, 1246.6575pt x 677.53125pt>
-File: imagenes/3.png Graphic file (type png)
+]
+<imagenes/5.jpeg, id=383, 1028.34187pt x 292.09125pt>
+File: imagenes/5.jpeg Graphic file (type jpg)
+ <use imagenes/5.jpeg>
+Package pdftex.def Info: imagenes/5.jpeg used on input line 157.
+(pdftex.def)             Requested size: 287.93376pt x 81.78497pt.
 
-<use imagenes/3.png>
-Package pdftex.def Info: imagenes/3.png used on input line 137.
-(pdftex.def)             Requested size: 299.20392pt x 162.61081pt.
+[14
 
-Overfull \hbox (8.46129pt too wide) in paragraph at lines 137--137
- [] 
- []
+ <./imagenes/5.jpeg>] <imagenes/6.jpeg, id=410, 1031.35312pt x 292.09125pt>
+File: imagenes/6.jpeg Graphic file (type jpg)
 
-[11
+<use imagenes/6.jpeg>
+Package pdftex.def Info: imagenes/6.jpeg used on input line 164.
+(pdftex.def)             Requested size: 288.7769pt x 81.78497pt.
+ [15
 
- <./imagenes/3.png>] [12
+ <./imagenes/6.jpeg>] [16
+
+] [17
 
  </usr/share/texlive/texmf-dist/tex/latex/beamer/art/beamericonarticle.pdf>]
 \tf@nav=\write6
@@ -1321,14 +1328,14 @@ Overfull \hbox (8.46129pt too wide) in paragraph at lines 137--137
 \tf@snm=\write8
 \openout8 = `doc.snm'.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 147.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 147.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 183.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 183.
  (./doc.aux
 LaTeX Info: Redefining \. on input line 25.
 LaTeX Info: Redefining \% on input line 25.
 )
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 147.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 147.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 183.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 183.
 Package rerunfilecheck Info: File `doc.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
 
@@ -1336,16 +1343,16 @@ Package rerunfilecheck Info: File `doc.out' has not changed.
 LaTeX Font Warning: Size substitutions with differences
 (Font)              up to 1.0pt have occurred.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 147.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 183.
  ) 
 Here is how much of TeX's memory you used:
- 17929 strings out of 493029
- 338414 string characters out of 6136235
- 421245 words of memory out of 5000000
- 21009 multiletter control sequences out of 15000+600000
+ 17953 strings out of 493029
+ 338613 string characters out of 6136235
+ 420037 words of memory out of 5000000
+ 21021 multiletter control sequences out of 15000+600000
  12007 words of font info for 43 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 56i,16n,57p,410b,658s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 56i,16n,57p,410b,569s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share
 /texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb></usr/share/texli
@@ -1355,10 +1362,10 @@ mf-dist/fonts/type1/public/amsfonts/cm/cmss8.pfb></usr/share/texlive/texmf-dist
 ts/type1/public/amsfonts/cm/cmssi10.pfb></usr/share/texlive/texmf-dist/fonts/ty
 pe1/public/amsfonts/cm/cmssi8.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
 blic/amsfonts/cm/cmsy10.pfb>
-Output written on doc.pdf (12 pages, 512537 bytes).
+Output written on doc.pdf (17 pages, 291067 bytes).
 PDF statistics:
- 403 PDF objects out of 1000 (max. 8388607)
- 358 compressed objects within 4 object streams
- 27 named destinations out of 1000 (max. 500000)
- 94 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 538 PDF objects out of 1000 (max. 8388607)
+ 487 compressed objects within 5 object streams
+ 37 named destinations out of 1000 (max. 500000)
+ 93 words of extra memory for PDF output out of 10000 (max. 10000000)
 

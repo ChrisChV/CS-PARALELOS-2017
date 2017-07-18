@@ -4,31 +4,37 @@
 #include <cuda.h>
 #include <sys/time.h>
 
-#define TILE_WIDTH 2
+#define TILE_WIDTH 32
 
 
 __global__ void matrixMulKernel(float* A, float* B, float* C, int n) {
 	__shared__ float Mds[TILE_WIDTH][TILE_WIDTH];
-	__shared__ float Nds[TILE_WIDTH][TILE_WIDTH];
+	__shared__ float Nds[TILE_WIDTH][TILE_WIDTH * 2];
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
 	int tx = threadIdx.x;
 	int ty = threadIdx.y;
 
 	int Row = by * TILE_WIDTH + ty;
-	int Col = bx * TILE_WIDTH + tx;
+	int Col1 = bx * TILE_WIDTH * 2 + tx;
+	int Col2 = Col1 + TILE_WIDTH;
 
-	float Pvalue = 0;
+	float Pvalue1 = 0;
+	float Pvalue2 = 0;
+
 	for (int ph = 0; ph < n/TILE_WIDTH; ++ph) {
 		Mds[ty][tx] = A[Row*n + ph*TILE_WIDTH + tx];
-		Nds[ty][tx] = B[(ph*TILE_WIDTH + ty)*n + Col];
+		Nds[ty][tx] = B[(ph*TILE_WIDTH + ty)*n + Col1];
+		Nds[ty][tx + TILE_WIDTH] = B[(ph*TILE_WIDTH + ty)*n + Col2];
 		__syncthreads();
 		for (int k = 0; k < TILE_WIDTH; ++k) {
-			Pvalue += Mds[ty][k] * Nds[k][tx];
+			Pvalue1 += Mds[ty][k] * Nds[k][tx];
+			Pvalue2 += Mds[ty][k] * Nds[k][tx + TILE_WIDTH];
 		}
 		__syncthreads();
 	}
-	C[Row*n + Col] = Pvalue;
+	C[Row*n + Col1] = Pvalue1;
+	C[Row*n + Col2] = Pvalue2;
 }
 
 
@@ -55,7 +61,7 @@ void hostMatrixMul(float * A, float * B, float * C, int n){
 	cudaMalloc((void **) &d_C, size);
 	cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
-	dim3 dimGrid(ceil(n/TILE_WIDTH),ceil(n/TILE_WIDTH),1);
+	dim3 dimGrid(ceil(n/TILE_WIDTH),ceil(n/(TILE_WIDTH*2)),1);
 	dim3 dimBlock(TILE_WIDTH,TILE_WIDTH,1);
 
 	gettimeofday(&t1, 0);
@@ -67,7 +73,6 @@ void hostMatrixMul(float * A, float * B, float * C, int n){
 
 	cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
 	cudaFree(d_A);
-	printMatrix(C,n);
 }
 
 
@@ -91,5 +96,5 @@ int main(int argv, char ** argc){
 	for(int i = 0; i < n * n; i++) B[i] = 2;
 	float * C = (float *) malloc(sizeof(float) * n * n);
 	hostMatrixMul(A,B,C,n);
-	
+//	printMatrix(C,n);
 }

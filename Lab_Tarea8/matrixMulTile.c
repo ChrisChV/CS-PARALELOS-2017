@@ -4,7 +4,7 @@
 #include <cuda.h>
 #include <sys/time.h>
 
-#define TILE_WIDTH 2
+#define TILE_WIDTH 32
 
 
 __global__ void matrixMulKernel(float* A, float* B, float* C, int n) {
@@ -67,7 +67,6 @@ void hostMatrixMul(float * A, float * B, float * C, int n){
 
 	cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
 	cudaFree(d_A);
-	printMatrix(C,n);
 }
 
 
@@ -91,5 +90,5 @@ int main(int argv, char ** argc){
 	for(int i = 0; i < n * n; i++) B[i] = 2;
 	float * C = (float *) malloc(sizeof(float) * n * n);
 	hostMatrixMul(A,B,C,n);
-	
+//	printMatrix(C,n);
 }

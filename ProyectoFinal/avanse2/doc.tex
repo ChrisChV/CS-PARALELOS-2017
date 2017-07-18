@@ -1,4 +1,4 @@
-\documentclass{beamer}c
+\documentclass{beamer}
 \usepackage[utf8]{inputenc}
 \usepackage[spanish,es-tabla]{babel}
 \usepackage{graphicx}
@@ -6,7 +6,7 @@
 
 \usetheme{PaloAlto}
 
-\title{An Efficient Parallel Algorithm for Secured Data Communications Using RSA Public Key Cryptography Method}
+\title{Paralelización de RSA con Open MPI y POSIX Threads}
 
 \author{Christofer Chávez Carazas}
 
@@ -32,16 +32,18 @@
 
 \begin{frame}{Motivación}
   \begin{itemize}
-   \item Utilizar \textit{GNU MP} para realizar las operaciones con enteros grandes que requiere el \textit{RSA}.
+   \item Operaciones con números grandes.
    \item Paralelizar la exponenciación modular con \textit{OpenMP} para reducir el tiempo de encriptado y desencriptado.
    del \textit{RSA}
+   \item Creación de hilos inecesarios.
   \end{itemize}
 \end{frame}
+
 
 \begin{frame}{RSA}
  \begin{itemize}
   \item Sistema criptográfico asimétrico.
-  \item Producto de dos números primos grandes.
+  \item Seguridad basada en dos números primos grandes.
   \item Usa al exponenciación modular.
  \end{itemize}
 \end{frame}
@@ -92,49 +94,83 @@
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Experimentos - Test Case Sets}
-  \begin{block}{Test Case Set 1}
-   \begin{itemize}
-    \item Diferentes tamaños de llaves: 128, 256, 512, 768, 1024 y 2048 bits.
-    \item Mismo tamaño de mensaje: 5000 caracteres.
-   \end{itemize}
-  \end{block}
-  \begin{block}{Test Case Set 2}
-   \begin{itemize}
-    \item Mismo tamaño de llaves: 1024 bits.
-    \item Diferentes tamaños de mensaje: 1000, 2000, 3000, 4000, 5000 y 6000 caracteres.
-   \end{itemize}
-  \end{block}
+\begin{frame}{Propuesta}
+  \begin{itemize}
+   \item Utilizar \textit{Open MPI} para paralelizar el cifrado y descifrado del mensaje.
+   \item Utilizar \textit{POXIS Threads} para paralelizar la exponenciación modular.
+   \item Optimizar la creación de hilos y la distribución de los datos.
+  \end{itemize}
 \end{frame}
 
-\begin{frame}{Experimentos}
-   \begin{itemize}
-    \item Se tomó el tiempo de cifrado, descifrado y las suma de los dos anteriores más el tiempo
-    que demora la generación de llaves
-    \item Para cada caso se corrió el programa 25 veces y se sacó el tiempo promedio.
-    \item Se calculó el \textit{speedup} para los casos con 8 threads.
-   \end{itemize}
+
+\begin{frame}{Distribución en MPI}
+  \begin{itemize}
+   \item Se distribuye el mensaje entre los procesos.
+   \item Se convierte la key en su forma binaria y se copia en todos los procesos.
+  \end{itemize}
 \end{frame}
 
-\begin{frame}{Experimentos - Resultados - Set 1}
-  \begin{table}
-  \begin{figure}
-   \includegraphics[scale = 0.25]{2.png}
-  \end{figure}
-  \caption{Resultados con el \textit{Set 1}}
-  \end{table}
+\begin{frame}{Distribución en Pthreads}
+  \begin{itemize}
+   \item Se crea una matriz compartida entre los hilos.
+   \item Cada hilo opera una columna de la matriz.
+   \item Se crea un array compartido entre los hilos.
+   \item Se reparten las filas de la matriz entre los hilos.
+   \item El resultado de la multiplicación se guarda en el array.
+  \end{itemize}
 \end{frame}
 
-\begin{frame}{Experimentos - Resultados - Set 2}
-  \begin{table}
-   \begin{figure}
-    \includegraphics[scale = 0.24]{3.png}
-   \end{figure}
-  \caption{Resultados con el \textit{Set 2}}
-  \end{table}
 
- 
+\begin{frame}
+ \begin{figure}
+  \centering
+  \includegraphics[scale = 0.6]{4.png}
+ \end{figure}
 \end{frame}
+
+\begin{frame}{SetUp}
+ Los experimentos se realizaron en el supercomputador de la UNSA
+ \begin{itemize}
+  \item GPUs: 24 x 2.60 GHz.
+  \item Memory(RAM): 62.90 GB.
+  \item SO: Linux 3.10.0-514.16.1.el7.x86 64 (x86 64).
+ \end{itemize}
+\end{frame}
+
+\begin{frame}{Características de los experimentos}
+  \begin{itemize}
+   \item Llaves de 512 bits y 1024 bits.
+   \item Combinaciones entre el número de nodos (1,2,4,6) y el número
+    de hilos por nodo (1,2,4,8,16,24).
+    \item Tres mensajes generados aleatoriamente de tamaños 1024, 4096, 16392 caracteres.
+   \item Cada experimento se ejecutó 25 veces y se sacó el promedio.
+  \end{itemize} 
+\end{frame}
+
+
+
+\begin{frame}{Resultados con key de 512 bits}
+ \begin{figure}
+  \centering
+  \includegraphics[scale = 0.28]{5.jpeg}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{Resultados con key de 1024 bits}
+ \begin{figure}
+  \centering
+  \includegraphics[scale = 0.28]{6.jpeg}
+ \end{figure}
+\end{frame}
+
+
+\begin{frame}{Conclusiones}
+ \begin{itemize}
+  \item Se logra paralelizar el RSA de forma optima en la parte de MPI.
+  \item Aunque se pueda ganar tiempo al no crear más hilos de los necesarios, se necesita de más memoria para guardar las matrices creadas en cada proceso.
+ \end{itemize}
+\end{frame}
+
 
 
 \begin{frame}

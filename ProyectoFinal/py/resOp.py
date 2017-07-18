@@ -33,5 +33,5 @@ def fun(resFile, outFile):
 	archivo.close()
 	archivoOut.close()
 
-fun("set2.lab","set2.lab.res")
+fun("set6","set6.res")
 
